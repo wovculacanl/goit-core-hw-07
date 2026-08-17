@@ -182,7 +182,7 @@ def add_contact(args, book: AddressBook):
 
 
 from collections import UserDict
-
+from datetime import datetime, timedelta
 
 
 def input_error(func):
@@ -217,10 +217,20 @@ class Phone(Field):
             raise ValueError("Phone number must be exactly 10 digits.")
         super().__init__(value)
 
+class Birthday(Field):
+    def __init__(self, value):
+        try:
+            datetime.strftime(value, "%d.%m.%Y")
+            self.value = value
+        except ValueError:
+            raise ValueError("Invalid date format. Use DD.MM.YYYY")
+
+
 class Record:
     def __init__(self, name):
         self.name = Name(name)
         self.phones = []
+        self.birthday = None
 
     def add_phone(self, phone_number):
         self.phones.append(Phone(phone_number))
@@ -284,21 +294,6 @@ class Birthday(Field):
         except ValueError:
             raise ValueError("Invalid date format. Use DD.MM.YYYY")
 
-class Record:
-    def __init__(self, name):
-        self.name = Name(name)
-        self.phones = []
-        self.birthday = None
-    @input_error
-    def show_birthday(args, book):
-        name = args[0]
-        record = book.find(name)
-        if record is None:
-            raise ValueError("Contact not found.")
-        if record.birthday is None:
-            return "Birthday not set."
-        return f"Birthday for {name}: {record.birthday.value}"
-
     @input_error
     def show_birthday(args, book):
         name = args[0]
@@ -310,10 +305,6 @@ class Record:
         return f"Birthday for {name}: {record.birthday.value}"
 
         
-        
-    
-
-
 @input_error
 def show_birthday(args, book):
     name = args[0]
