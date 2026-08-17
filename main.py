@@ -183,6 +183,23 @@ def add_contact(args, book: AddressBook):
 
 from collections import UserDict
 
+
+def input_error(func):
+    """
+    Декоратор для обробки помилок введення користувача.
+    Обробляє винятки KeyError, ValueError, IndexError та повертає відповідні повідомлення.
+    """
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except KeyError:
+            return "Contact not found."
+        except ValueError:
+            return "Give me name and phone please."
+        except IndexError:
+            return "Enter the argument for the command."
+    return inner
+
 class Field:
     def __init__(self, value):
         self.value = value
@@ -245,6 +262,37 @@ class AddressBook(UserDict):
 
     def __str__(self):
         return '\n'.join(str(record) for record in self.data.values())
+
+class Birthday(Field):
+    def __init__(self, value):
+        try:
+            day, month, year = map(int, value.split('.'))
+            self.value = f"{day:02d}.{month:02d}.{year}"
+        except ValueError:
+            raise ValueError("Invalid date format. Use DD.MM.YYYY")
+
+class Record:
+    def __init__(self, name):
+        self.name = Name(name)
+        self.phones = []
+        self.birthday = None
+
+    # def add_birthday(self, birthday_str):
+    #     self.birthday = Birthday(birthday_str)
+
+    # def get_birthday(self):
+    #     return self.birthday.value if self.birthday else None
+    
+@input_error
+def add_birthday(args, book):
+    name, birthday_str = args[0], args[1]
+    record = book.find(name)
+    if record is None:
+        raise ValueError("Contact not found.")
+    record.birthday = Birthday(birthday_str)
+    return "Birthday added."
+
+
 
 
 
