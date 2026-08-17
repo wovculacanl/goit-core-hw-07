@@ -184,6 +184,7 @@ def add_contact(args, book: AddressBook):
 from collections import UserDict
 
 
+
 def input_error(func):
     """
     Декоратор для обробки помилок введення користувача.
@@ -260,6 +261,18 @@ class AddressBook(UserDict):
         else:
             raise ValueError(f"Record with name {name} not found.")
 
+    def add_birthday(self, birthday):
+        pass
+       
+
+        
+    def get_upcoming_birthdays(self):
+        upcoming_birthdays = []
+        for record in self.data.values():
+            if hasattr(record, 'birthday') and record.birthday:
+                upcoming_birthdays.append({"name": record.name.value, "birthday": record.birthday.value})
+        return upcoming_birthdays    
+
     def __str__(self):
         return '\n'.join(str(record) for record in self.data.values())
 
@@ -276,59 +289,130 @@ class Record:
         self.name = Name(name)
         self.phones = []
         self.birthday = None
+    @input_error
+    def show_birthday(args, book):
+        name = args[0]
+        record = book.find(name)
+        if record is None:
+            raise ValueError("Contact not found.")
+        if record.birthday is None:
+            return "Birthday not set."
+        return f"Birthday for {name}: {record.birthday.value}"
 
-    # def add_birthday(self, birthday_str):
-    #     self.birthday = Birthday(birthday_str)
+    @input_error
+    def show_birthday(args, book):
+        name = args[0]
+        record = book.find(name)
+        if record is None:
+            raise ValueError("Contact not found.")
+        if record.birthday is None:
+            return "Birthday not set."
+        return f"Birthday for {name}: {record.birthday.value}"
 
-    # def get_birthday(self):
-    #     return self.birthday.value if self.birthday else None
+        
+        
     
+
+
 @input_error
-def add_birthday(args, book):
-    name, birthday_str = args[0], args[1]
+def show_birthday(args, book):
+    name = args[0]
     record = book.find(name)
     if record is None:
         raise ValueError("Contact not found.")
-    record.birthday = Birthday(birthday_str)
-    return "Birthday added."
+    if record.birthday is None:
+        return "Birthday not set."
+    return f"Birthday for {name}: {record.birthday.value}"
+
+def parse_input(user_input):
+    '''
+   Reads the user input string and extracts the command and its arguments.
+    '''
+
+    cmd, *args = user_input.split()
+    cmd = cmd.strip().lower()
+    return cmd, *args
+
+
+@input_error
+def birthdays(args, book):
+    return book.get_upcoming_birthdays()
+
+@input_error
+def add_contact(args, book: AddressBook):
+    name, phone, *_ = args
+    record = book.find(name)
+    message = "Contact updated."
+    if record is None:
+        record = Record(name)
+        book.add_record(record)
+        message = "Contact added."
+    if phone:
+        record.add_phone(phone)
+    return message
+
+
+@input_error
+def change_contact(args, contacts): 
+    
+    '''
+    Replaces the phone number for an existing contact in the contacts dictionary.
+    '''
+
+    name, new_phone = args[0], args[1]
+    _ = contacts[name]  # This will raise KeyError if the contact does not exist
+    contacts[name] = new_phone
+    return "Contact updated."
+
+@input_error
+def show_all_contacts(contacts):
+    '''
+    Shows all saved contacts with their phone numbers.
+    '''
+    if contacts:
+        return "\n".join(f"{name}: {phone}" for name, phone in contacts.items())
+    else:
+        return "No contacts found."
+
+def main():
+    book = AddressBook()
+    print("Welcome to the assistant bot!")
+    while True:
+        user_input = input("Enter a command: ")
+        command, *args = parse_input(user_input)
+
+        if command in ["close", "exit"]:
+            print("Good bye!")
+            break
+
+        elif command == "hello":
+            print("How can I help you?")
+
+        elif command == "add":
+            print(add_contact(args, book))
+
+        elif command == "change":
+            print(change_contact(args, book))
+
+        elif command == "phone":
+            print(show_phone(args, book))
+
+        elif command == "all":
+            print(show_all_contacts(args,book))
+
+          
+
+        elif command == "add-birthday":
+            print(add_birthday(args, book))
+
+        elif command == "show-birthday":
+            print(show_birthday(args, book))
+
+        elif command == "birthdays":
+            print(birthdays(args, book))
+
+        else:
+            print("Invalid command.")
 
 
 
-
-
-
-# Make a new address book
-book = AddressBook()
-
-# Make a new record for John
-john_record = Record("John")
-john_record.add_phone("1234567890")
-john_record.add_phone("5555555555")
-
-# Add John's record to the address book
-book.add_record(john_record)
-
-# Make a new record for Jane
-jane_record = Record("Jane")
-jane_record.add_phone("9876543210")
-book.add_record(jane_record)
-
-print(book)
-
-
-# Find and edit John's phone number
-john = book.find("John")
-john.edit_phone("1234567890", "1112223333")
-
-
-print(john)  # Output: Contact name: John, phones: 5555555555; 1112223333
-
-
-# Find a specific phone number in John's record
-found_phone = john.find_phone("5555555555")
-print(f"{john.name}: {found_phone}")  # Output: John: 5555555555
-
-# Delete Jane's record
-book.delete("Jane")
-
-print(book)
