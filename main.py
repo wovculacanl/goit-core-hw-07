@@ -405,10 +405,41 @@ def show_birthday(args, book):
     return f"Birthday for {name}: {record.birthday.value}"
 
 
+@input_error
+def add_birthday(args, book: AddressBook):
+    if len(args) != 2:
+        raise ValueError("Usage: add-birthday [name] [DD.MM.YYYY]")
+    name, birthday = args
+    record = book.find(name)
+    if record is None:
+        raise KeyError
+    record.add_birthday(birthday)
+    return "Birthday added."
 
+@input_error
+def show_birthday(args, book: AddressBook):
+    name = args[0]
+    record = book.find(name)
+    if record is None:
+        raise KeyError
+    if record.birthday is None:
+        return "Birthday not set."
+    return f"Birthday for {name}: {record.birthday.value}"
 
+@input_error
+def birthdays(args, book: AddressBook):
+    upcoming = book.get_upcoming_birthdays()
+    if not upcoming:
+        return "No upcoming birthdays within the next 7 days."
+    
+    result = "Upcoming birthdays:\n"
+    for info in upcoming:
+        result += f" - {info['name']}: {info['birthday']}\n"
+    return result.strip()
 
-
+#================================
+# MAIN FUNCTION
+#================================
 
 
 def main():
@@ -451,5 +482,6 @@ def main():
         else:
             print("Invalid command.")
 
-
+if __name__ == "__main__":
+    main()
 
